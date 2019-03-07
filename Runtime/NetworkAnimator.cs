@@ -22,6 +22,9 @@ namespace UnityEngine.Networking
         [SerializeField] Animator   m_Animator;
         [SerializeField] uint       m_ParameterSendBits;
 
+        AnimatorControllerParameter m_AnimatorControllerParameter;
+        AnimatorControllerParameter[] m_AnimatorControllerParameters;
+
         // static message objects to avoid runtime-allocations
         static AnimationMessage s_AnimationMessage = new AnimationMessage();
         static AnimationParametersMessage s_AnimationParametersMessage = new AnimationParametersMessage();
@@ -262,65 +265,67 @@ namespace UnityEngine.Networking
 
         void WriteParameters(NetworkWriter writer, bool autoSend)
         {
-            for (int i = 0; i < m_Animator.parameters.Length; i++)
+            m_AnimatorControllerParameters = m_Animator.parameters;
+            for (int i = 0; i < m_AnimatorControllerParameters.Length; i++)
             {
                 if (autoSend && !GetParameterAutoSend(i))
                     continue;
 
-                AnimatorControllerParameter par = m_Animator.parameters[i];
-                if (par.type == AnimatorControllerParameterType.Int)
+                m_AnimatorControllerParameter = m_AnimatorControllerParameters[i];
+                if (m_AnimatorControllerParameter.type == AnimatorControllerParameterType.Int)
                 {
-                    writer.WritePackedUInt32((uint)m_Animator.GetInteger(par.nameHash));
+                    writer.WritePackedUInt32((uint)m_Animator.GetInteger(m_AnimatorControllerParameter.nameHash));
 
-                    SetSendTrackingParam(par.name + ":" + m_Animator.GetInteger(par.nameHash), i);
+                    SetSendTrackingParam(m_AnimatorControllerParameter.name + ":" + m_Animator.GetInteger(m_AnimatorControllerParameter.nameHash), i);
                 }
 
-                if (par.type == AnimatorControllerParameterType.Float)
+                if (m_AnimatorControllerParameter.type == AnimatorControllerParameterType.Float)
                 {
-                    writer.Write(m_Animator.GetFloat(par.nameHash));
+                    writer.Write(m_Animator.GetFloat(m_AnimatorControllerParameter.nameHash));
 
-                    SetSendTrackingParam(par.name + ":" + m_Animator.GetFloat(par.nameHash), i);
+                    SetSendTrackingParam(m_AnimatorControllerParameter.name + ":" + m_Animator.GetFloat(m_AnimatorControllerParameter.nameHash), i);
                 }
 
-                if (par.type == AnimatorControllerParameterType.Bool)
+                if (m_AnimatorControllerParameter.type == AnimatorControllerParameterType.Bool)
                 {
-                    writer.Write(m_Animator.GetBool(par.nameHash));
+                    writer.Write(m_Animator.GetBool(m_AnimatorControllerParameter.nameHash));
 
-                    SetSendTrackingParam(par.name + ":" + m_Animator.GetBool(par.nameHash), i);
+                    SetSendTrackingParam(m_AnimatorControllerParameter.name + ":" + m_Animator.GetBool(m_AnimatorControllerParameter.nameHash), i);
                 }
             }
         }
 
         void ReadParameters(NetworkReader reader, bool autoSend)
         {
-            for (int i = 0; i < m_Animator.parameters.Length; i++)
+            m_AnimatorControllerParameters = m_Animator.parameters;
+            for (int i = 0; i < m_AnimatorControllerParameters.Length; i++)
             {
                 if (autoSend && !GetParameterAutoSend(i))
                     continue;
 
-                AnimatorControllerParameter par = m_Animator.parameters[i];
-                if (par.type == AnimatorControllerParameterType.Int)
+                m_AnimatorControllerParameter = m_AnimatorControllerParameters[i];
+                if (m_AnimatorControllerParameter.type == AnimatorControllerParameterType.Int)
                 {
                     int newValue = (int)reader.ReadPackedUInt32();
-                    m_Animator.SetInteger(par.nameHash, newValue);
+                    m_Animator.SetInteger(m_AnimatorControllerParameter.nameHash, newValue);
 
-                    SetRecvTrackingParam(par.name + ":" + newValue, i);
+                    SetRecvTrackingParam(m_AnimatorControllerParameter.name + ":" + newValue, i);
                 }
 
-                if (par.type == AnimatorControllerParameterType.Float)
+                if (m_AnimatorControllerParameter.type == AnimatorControllerParameterType.Float)
                 {
                     float newFloatValue = reader.ReadSingle();
-                    m_Animator.SetFloat(par.nameHash, newFloatValue);
+                    m_Animator.SetFloat(m_AnimatorControllerParameter.nameHash, newFloatValue);
 
-                    SetRecvTrackingParam(par.name + ":" + newFloatValue, i);
+                    SetRecvTrackingParam(m_AnimatorControllerParameter.name + ":" + newFloatValue, i);
                 }
 
-                if (par.type == AnimatorControllerParameterType.Bool)
+                if (m_AnimatorControllerParameter.type == AnimatorControllerParameterType.Bool)
                 {
                     bool newBoolValue = reader.ReadBoolean();
-                    m_Animator.SetBool(par.nameHash, newBoolValue);
+                    m_Animator.SetBool(m_AnimatorControllerParameter.nameHash, newBoolValue);
 
-                    SetRecvTrackingParam(par.name + ":" + newBoolValue, i);
+                    SetRecvTrackingParam(m_AnimatorControllerParameter.name + ":" + newBoolValue, i);
                 }
             }
         }
