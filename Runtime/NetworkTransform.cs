@@ -141,6 +141,8 @@ namespace UnityEngine.Networking
         Quaternion      m_PrevRotation;
         float           m_PrevRotation2D;
         float           m_PrevVelocity;
+        float           m_PositionDelta;
+        float           m_AngleDelta;
 
         const float     k_LocalMovementThreshold = 0.00001f;
         const float     k_LocalRotationThreshold = 0.00001f;
@@ -702,17 +704,69 @@ namespace UnityEngine.Networking
             else
             {
                 // position
-                transform.position = reader.ReadVector3();
+                m_PositionDelta = 0f;
+                m_PrevPosition = targetSyncPosition;
+                m_TargetSyncPosition = reader.ReadVector3();
 
                 // no velocity
 
                 // rotation
                 if (syncRotationAxis != AxisSyncMode.None)
                 {
-                    transform.rotation = UnserializeRotation3D(reader, syncRotationAxis, rotationSyncCompression);
+                    m_AngleDelta = 0;
+                    m_PrevRotation = targetSyncRotation3D;
+                    m_TargetSyncRotation3D = UnserializeRotation3D(reader, syncRotationAxis, rotationSyncCompression);
                 }
 
                 // no spin
+            }
+            if (isServer && !isClient)
+            {
+                // dedicated server needs to apply immediately, there is no interpolation
+                transform.position = m_TargetSyncPosition;
+                transform.rotation = m_TargetSyncRotation3D;
+                return;
+            }
+
+            // handle zero send rate
+            if (GetNetworkSendInterval() == 0)
+            {
+                transform.position = m_TargetSyncPosition;
+                if (m_SyncRotationAxis != AxisSyncMode.None)
+                {
+                    transform.rotation = m_TargetSyncRotation3D;
+                }
+
+                // (syncSpin)
+
+                return;
+            }
+
+            // handle position snap threshold
+            float dist = (transform.position - m_TargetSyncPosition).sqrMagnitude;
+            if (dist > (m_SnapThreshold * m_SnapThreshold))
+            {
+                transform.position = m_TargetSyncPosition;
+                transform.rotation = m_TargetSyncRotation3D;
+                return;
+            }
+
+            // handle no rotation interpolation
+            if (m_InterpolateRotation == 0 && m_SyncRotationAxis != AxisSyncMode.None)
+            {
+                transform.rotation = m_TargetSyncRotation3D;
+                //(syncSpin)
+            }
+
+            // handle no movement interpolation
+            if (m_InterpolateMovement == 0)
+            {
+                transform.position = m_TargetSyncPosition;
+            }
+
+            if (initialState && m_SyncRotationAxis != AxisSyncMode.None)
+            {
+                transform.rotation = m_TargetSyncRotation3D;
             }
         }
 
@@ -1216,12 +1270,27 @@ namespace UnityEngine.Networking
             }
         }
 
+        void InterpolateTransform()
+        {
+            if (m_InterpolateMovement != 0)
+            {
+                m_PositionDelta += Time.deltaTime / GetNetworkSendInterval();
+                transform.position = Vector3.Lerp(m_PrevPosition, m_TargetSyncPosition, m_PositionDelta);
+            }
+
+            if (m_InterpolateRotation != 0)
+            {
+                m_AngleDelta += Time.deltaTime / GetNetworkSendInterval();
+                transform.rotation = Quaternion.Slerp(m_PrevRotation, m_TargetSyncRotation3D, m_AngleDelta);
+            }
+        }
+
         void InterpolateTransformMode3D()
         {
             if (m_InterpolateMovement != 0)
             {
-                Vector3 newVelocity = (m_TargetSyncPosition - m_RigidBody3D.position) * m_InterpolateMovement / GetNetworkSendInterval();
-                m_RigidBody3D.velocity = newVelocity;
+
+                m_RigidBody3D.velocity = (m_TargetSyncPosition - m_RigidBody3D.position) * m_InterpolateMovement / GetNetworkSendInterval(); ;
             }
 
             if (interpolateRotation != 0)
@@ -1308,6 +1377,9 @@ namespace UnityEngine.Networking
 
         void Update()
         {
+            if (isClient && !hasAuthority)
+                UpdateClient();
+
             if (!hasAuthority)
                 return;
 
@@ -1323,6 +1395,13 @@ namespace UnityEngine.Networking
                 m_LastClientSendTime = Time.time;
             }
         }
+
+
+        void UpdateClient()
+        {
+            if (transformSyncMode == TransformSyncMode.SyncTransform) InterpolateTransform();
+        }
+
 
         bool HasMoved()
         {
