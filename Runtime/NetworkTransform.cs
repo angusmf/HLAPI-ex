@@ -1687,9 +1687,7 @@ namespace UnityEngine.Networking
                     break;
 
                 case AxisSyncMode.AxisXYZ:
-                    WriteAngle(writer, rot.eulerAngles.x, compression);
-                    WriteAngle(writer, rot.eulerAngles.y, compression);
-                    WriteAngle(writer, rot.eulerAngles.z, compression);
+                    writer.Write(rot);
                     break;
             }
         }
@@ -1797,8 +1795,7 @@ namespace UnityEngine.Networking
                     break;
 
                 case AxisSyncMode.AxisXYZ:
-                    rotv.Set(ReadAngle(reader, compression), ReadAngle(reader, compression), ReadAngle(reader, compression));
-                    rotation.eulerAngles = rotv;
+                    rotation = reader.ReadQuaternion();
                     break;
             }
             return rotation;
