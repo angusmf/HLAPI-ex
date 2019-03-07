@@ -1789,5 +1789,12 @@ namespace UnityEngine.Networking
             // must reset this timer, or the server will continue to send target position instead of current position
             m_LastClientSyncTime = 0;
         }
+
+        public override void OnStopAuthority()
+        {
+            // must reset this timer, or we don't start listening for updates
+            m_LastClientSyncTime = 0;
+        }
+
     }
 }
