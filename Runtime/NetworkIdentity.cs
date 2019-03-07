@@ -427,16 +427,9 @@ namespace UnityEngine.Networking
             }
             m_IsServer = true;
 
-            if (m_LocalPlayerAuthority)
-            {
-                // local player on server has NO authority
-                m_HasAuthority = false;
-            }
-            else
-            {
-                // enemy on server has authority
-                m_HasAuthority = true;
-            }
+            //This is the correct initalization value. It will be set to true by SetLocalPlayer or ForceAuthority if appropriate.
+            //Setting true here (as in original code) causes ForceAuthority to behave incorrectly
+            m_HasAuthority = false;
 
             m_Observers = new List<NetworkConnection>();
             m_ObserverConnections = new HashSet<int>();
