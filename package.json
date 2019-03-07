@@ -12,7 +12,7 @@
     "api"
   ],
   "dependencies": {
-    "nuget.mono-cecil": "0.1.5-preview"
+    "nuget.mono-cecil": "0.1.6-preview"
   },
   "repository": {
     "type": "git",
