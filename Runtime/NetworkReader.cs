@@ -554,7 +554,39 @@ namespace UnityEngine.Networking
         /// <returns>The quaternion read from the stream.</returns>
         public Quaternion ReadQuaternion()
         {
-            return new Quaternion(ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle());
+            uint readedData = ReadUInt32();
+
+            int largest = (int)(readedData >> 30);
+            float a, b, c;
+
+            const float minimum = -1.0f / 1.414214f;        // note: 1.0f / sqrt(2)
+            const float maximum = +1.0f / 1.414214f;
+            const float delta = maximum - minimum;
+            const uint maxIntegerValue = (1 << 10) - 1; // 10 bits
+            const float maxIntegerValueF = (float)maxIntegerValue;
+            uint integerValue;
+            float normalizedValue;
+            // a
+            integerValue = (readedData >> 20) & maxIntegerValue;
+            normalizedValue = (float)integerValue / maxIntegerValueF;
+            a = (normalizedValue * delta) + minimum;
+            // b
+            integerValue = (readedData >> 10) & maxIntegerValue;
+            normalizedValue = (float)integerValue / maxIntegerValueF;
+            b = (normalizedValue * delta) + minimum;
+            // c
+            integerValue = readedData & maxIntegerValue;
+            normalizedValue = (float)integerValue / maxIntegerValueF;
+            c = (normalizedValue * delta) + minimum;
+
+            Quaternion value = Quaternion.identity;
+            float d = Mathf.Sqrt(1f - a * a - b * b - c * c);
+            value[largest] = d;
+            value[(largest + 1) % 4] = a;
+            value[(largest + 2) % 4] = b;
+            value[(largest + 3) % 4] = c;
+
+            return value;
         }
 
         /// <summary>
