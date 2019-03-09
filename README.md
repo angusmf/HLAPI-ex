@@ -1,3 +1,11 @@
+Welcome to HLAPI-ex, which is the same sad, unloved HLAPI found on bitbucket and now in the Unity Package manager...BUT! There are a few cherry-picked fixes based on PRs from the old bitbucket repo. Clearly there are many more problems lurking in this code, including other PRs I didn't add. Some of them were of dubious or disputed quality. Others seeminly OK, yet still produced runtime errors. Still others have probably come in while I paused my own HLAPI work. The fixes here were necessary or improved performance in my case. I haven't gone looking for major fixes to architectural issues or dumb mistakes. Instead, the idea is to use HLAPI for prototyping and patch as needed for those purposes.   
+
+If you're here, you may know what a pain it has historically been to apply your own fixes to the HLAPI, so it's wonderful that, deprecated though it may be, it's now available as a package and works (if you don't have or manage to dispell the "can't copy hlapi-runtime.dll from temp to lib" error) as of 2019.1. This means you can do what I've done here, and put a copy of this  repo on github and then reference it from your /Packages/manifest.json file. LotteMakesStuff has a good example I couldn't be bothered to reproduce here at this time.
+
+I'm not expecting to spend much time on this, but on the off chance you find yourself actually wanting to use HLAPI (there are reasons, just DO NOT ask me what they are) and don't want to reach all the way over to the corner and press "Fork", feel free to reference this repo from your Package Manager. You can even submit PRs, ask questions, and let me know if I do something in a less than ideal way. But be nice. I'm the shy, sensitive programmer-type from the '80s or something.
+
+
+---Resume the OG Unity Readme here---
 # README #
 
 The Unity Multiplayer High Level API is the open source component of the Unity Multiplayer system, this was formerly a Unity extension DLL with some parts in the engine itself, now it all exist in a package. In this package we have the whole networking system except the NetworkTransport related APIs and classes. This is all the high level classes and components which make up the user friendly system of creating multiplayer games. This document details how you can enable or embed the package and use it in your games and applications.
