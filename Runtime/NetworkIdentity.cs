@@ -428,8 +428,8 @@ namespace UnityEngine.Networking
             m_IsServer = true;
 
             //This is the correct initalization value. It will be set to true by SetLocalPlayer or ForceAuthority if appropriate.
-            //Setting true here (as in original code) causes ForceAuthority to behave incorrectly
-            m_HasAuthority = false;
+            //Setting false here (as in original code if m_LocalPlayerAuthority = true) causes ForceAuthority to behave incorrectly
+            m_HasAuthority = true;
 
             m_Observers = new List<NetworkConnection>();
             m_ObserverConnections = new HashSet<int>();
